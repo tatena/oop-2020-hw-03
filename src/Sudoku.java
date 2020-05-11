@@ -1,3 +1,4 @@
+import java.awt.*;
 import java.util.*;
 
 /*
@@ -20,7 +21,17 @@ public class Sudoku {
 	"8 0 9 0 4 0 2 0 0",
 	"0 7 3 5 0 9 0 0 1",
 	"4 0 0 0 0 0 6 7 9");
-	
+
+	public static final int[][] myGrid = Sudoku.stringsToGrid(
+			"0 0 0 0 0 0 0 0 0",
+			"0 0 0 0 0 0 0 0 0",
+			"0 0 0 0 0 0 0 0 0",
+			"0 0 0 0 0 0 0 0 0",
+			"0 0 0 0 0 0 0 0 0",
+			"0 0 0 0 0 0 0 0 0",
+			"0 0 0 0 0 0 0 0 0",
+			"0 0 0 0 0 0 0 0 0",
+			"0 0 0 0 0 0 0 0 0");
 	
 	// Provided medium 5 3 grid
 	public static final int[][] mediumGrid = Sudoku.stringsToGrid(
@@ -51,6 +62,58 @@ public class Sudoku {
 	public static final int SIZE = 9;  // size of the whole 9x9 puzzle
 	public static final int PART = 3;  // size of each 3x3 part
 	public static final int MAX_SOLUTIONS = 100;
+
+	private int[][] board;
+	private ArrayList<Spot> spots;
+	private int numEmptySpots;
+	private long timeElapsed;
+	private int numSolutions = 0;
+	private String ansText = "";
+
+	public class Spot implements  Comparable<Spot> {
+		private int x;
+		private int y;
+		int value;
+		private HashSet<Integer> possibleNums;
+
+		public Spot(int x, int y, int value) {
+			this.x = x;
+			this.y = y;
+			this.value = value;
+			possibleNums = new HashSet<>();
+			getPossibleNums();
+		}
+
+		public void set(int value) {
+			board[x][y] = value;
+		}
+
+		@Override
+		public int compareTo(Spot toCompare) {
+			return this.possibleNums.size() - toCompare.possibleNums.size();
+		}
+
+		public void getPossibleNums() {
+			possibleNums.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
+			for (int i = 0; i < SIZE; i++) {
+				possibleNums.remove(board[x][i]);
+				possibleNums.remove(board[i][y]);
+				checkSquare();
+			}
+		}
+
+		private void checkSquare() {
+			int x0 = (x / 3) * 3;
+			int y0 = (y / 3) * 3;
+			for (int i = 0; i < PART; i++) {
+				for (int j = 0; j < PART; j++) {
+					possibleNums.remove(board[x0+i][y0+j]);
+				}
+			}
+		}
+
+	}
+
 	
 	// Provided various static utility methods to
 	// convert data formats to int[][] grid.
@@ -70,7 +133,7 @@ public class Sudoku {
 		}
 		return result;
 	}
-	
+
 	
 	/**
 	 * Given a single string containing 81 numbers, returns a 9x9 grid.
@@ -131,33 +194,99 @@ public class Sudoku {
 		System.out.println("solutions:" + count);
 		System.out.println("elapsed:" + sudoku.getElapsed() + "ms");
 		System.out.println(sudoku.getSolutionText());
+		System.out.println(sudoku);
 	}
 	
 	
-	
-
 	/**
 	 * Sets up based on the given ints.
 	 */
 	public Sudoku(int[][] ints) {
-		// YOUR CODE HERE
+		board = new int[SIZE][SIZE];
+		spots = new ArrayList<>();
+		numEmptySpots = 0;
+		timeElapsed = 0;
+		numSolutions = 0;
+
+		for(int i = 0; i < SIZE; i++) {
+			for (int j = 0; j < SIZE; j++) {
+				board[i][j] = ints[i][j];
+			}
+		}
 	}
-	
-	
-	
+
+	public  Sudoku(String text) {
+		this(textToGrid(text));
+	}
+
+
+	@Override
+	public String toString() {
+		String res = "";
+		for(int i = 0; i < SIZE; i++) {
+			for (int j = 0; j < SIZE; j++) {
+				res +=(String.valueOf(board[i][j]) + " ");
+			}
+			res+= "\n";
+		}
+		return res;
+	}
+
 	/**
 	 * Solves the puzzle, invoking the underlying recursive search.
 	 */
 	public int solve() {
-		return 0; // YOUR CODE HERE
+		long start =  System.currentTimeMillis();
+		getEmptySpots();
+		numEmptySpots = spots.size();
+		Collections.sort(spots);
+		solveRec(0);
+		long end =  System.currentTimeMillis();
+		timeElapsed = end - start;
+		return numSolutions;
 	}
-	
+
+
+	private void solveRec(int spotIndex) {
+		if (spotIndex >= numEmptySpots) {
+			if (numSolutions == 0)
+				ansText = toString();
+			numSolutions++;
+		} else {
+			Spot curr = spots.get(spotIndex);
+			curr.getPossibleNums();
+			for (int possNum : curr.possibleNums) {
+				//choose
+				curr.set(possNum);
+
+				//explore
+				solveRec(spotIndex + 1);
+
+				//unchoose
+				curr.set(0);
+
+				if (numSolutions >= MAX_SOLUTIONS)
+					return;
+			}
+		}
+	}
+
+	private void getEmptySpots() {
+		for(int i = 0; i < SIZE; i++) {
+			for (int j = 0; j < SIZE; j++) {
+				if(board[i][j] == 0)
+					spots.add(new Spot(i, j, board[i][j]));
+			}
+		}
+	}
+
+
 	public String getSolutionText() {
-		return ""; // YOUR CODE HERE
+		return ansText;
 	}
 	
 	public long getElapsed() {
-		return 0; // YOUR CODE HERE
+		return timeElapsed;
 	}
 
 }
