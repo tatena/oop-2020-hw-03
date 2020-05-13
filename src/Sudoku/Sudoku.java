@@ -1,3 +1,4 @@
+package Sudoku;
 import java.awt.*;
 import java.util.*;
 
