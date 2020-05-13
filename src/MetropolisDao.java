@@ -1,11 +1,12 @@
-public class Metropolis {
+
+public class MetropolisDao {
     public String name;
     public String continent;
     public String population;
     public String popSearch;
     public String exactSearch;
 
-    public Metropolis(String name, String continent, String population, String popSearch, String exactSearch) {
+    public MetropolisDao(String name, String continent, String population, String popSearch, String exactSearch) {
         this.name = name;
         this.continent = continent;
         this.population = population;
@@ -48,7 +49,7 @@ public class Metropolis {
         if(!population.equals("")) {
             if (!name.equals("") || !continent.equals(""))
                 res+= " AND ";
-            if(population.contains("Larger")) {
+            if(popSearch.contains("Larger")) {
                 res += "population > "  + population;
             } else {
                 res += "population < " + population;
